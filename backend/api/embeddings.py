@@ -7,30 +7,11 @@ from typing import List, Dict
 from sentence_transformers import SentenceTransformer
 
 
-def generate_embedding(chunks: List[Dict]) -> List[dict]:
+def get_huggingface_embeddings(text: List[str], model_name="sentence-transformers/all-mpnet-base-v2"):
     """Generates the proper embeddings for the parsed chunks including the hierarchical order
-
-    Args:
-        chunks (List[Dict]): List of Parsed chuks
-
-    Returns:
-        List[dict]: Embeddings with metadata
+        
     """
     
-    model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
-    embeddings = []
-    
-    for chunk in chunks:
-        # Generate embedding for the content of the chunk
-        embedding = model.encode(chunk["content"], show_progress_bar=True)
-        embeddings.append({
-            "embedding": embedding,
-            "metadata": {
-                "type": chunk["type"],
-                "name": chunk.get("name"),
-                "path": chunk["path"],
-                "start_line": chunk.get("start_line"),
-                "end_line": chunk.get("end_line"),
-            }
-        })
-    return embeddings
+    model = SentenceTransformer(model_name)
+        
+    return model.encode(text, show_progress_bar=True)
