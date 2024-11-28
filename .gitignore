@@ -30,3 +30,5 @@ build/
 *.egg-info/
 *.egg
 *.pyo
+
+.env
