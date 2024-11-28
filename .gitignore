@@ -1,0 +1,32 @@
+# Python virtual environment
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# macOS-specific files
+.DS_Store
+
+# Node.js dependencies
+node_modules/
+
+# Log files
+*.log
+
+# Temporary files and caches
+*.tmp
+*.swp
+*.swo
+.cache/
+dist/
+build/
+
+# IDE settings
+.idea/
+.vscode/
+*.iml
+
+# Python bytecode files
+*.egg-info/
+*.egg
+*.pyo

@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+gitpython
+tree-sitter-languages
+sentence-transformers
+pinecone-client
+python-dotenv
