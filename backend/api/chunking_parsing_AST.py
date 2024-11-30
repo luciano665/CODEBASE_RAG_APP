@@ -8,6 +8,10 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %
 logger = logging.getLogger(__name__)
 
 SUPPORTED_EXTENSIONS = {".py", ".java", ".js", ".ts", ".cpp", ".h", ".ipynb"}
+IGNORED_EXTENSIONS = {
+    ".pkl", ".npy", ".h5", ".bin", ".exe", ".dll", ".so", ".o", ".class", ".log", ".txt", 
+    ".md", ".csv", ".json", ".xml", ".yaml", ".yml", ".lock"
+}
 IGNORED_DIRS = {"node_modules", "venv", "env", "dist", "build", ".git", "__pycache__", ".next", ".vscode", "vendor"}
 
 class SimpleTreeSitterParser:
@@ -107,6 +111,12 @@ def parse_repo_store_all(repo_path: str) -> List[Dict]:
             file_path = os.path.join(root, file)
             extension = os.path.splitext(file)[1]
 
+            # Skip ignored file extensions
+            if extension in IGNORED_EXTENSIONS:
+                logger.warning(f"Skipping unsupported file type: {file_path}")
+                continue
+
+            # Process only supported extensions
             if extension in SUPPORTED_EXTENSIONS:
                 language = {
                     ".py": "python",

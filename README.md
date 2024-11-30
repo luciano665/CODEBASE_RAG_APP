@@ -16,4 +16,6 @@ python app.py
 
 # //TODOs
 
-- Make a better UI, fix slection of namespace after cloning new repo. Restart chatinterface when we selec other namespace
+- Fix the bug on when a new repo is added such that the selection markdawn updates automatically and we don;t have to run teh clining request again in order to update it. Is liek is one process behind of wher eit supposed to be.
+
+# links repos
