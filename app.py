@@ -11,22 +11,21 @@ API_URL = os.getenv("BACKEND_API_URL", "http://127.0.0.1:8000")
 
 
 def fetch_namespaces():
-    """
-    Fetch namespaces (repositories) from the backend.
-    """
+    """Fetch namespaces from the backend."""
     try:
         response = requests.get(f"{API_URL}/namespaces")
         if response.status_code == 200:
             return response.json().get("namespaces", [])
+        else:
+            print(f"Failed to fetch namespaces. Status code: {response.status_code}")
+            return []
     except Exception as e:
         print(f"Error fetching namespaces: {e}")
-    return []
+        return []
 
 
 def submit_repository(repo_url):
-    """
-    Clone and index a new repository by sending it to the backend.
-    """
+    """Clone and index a new repository by sending it to the backend."""
     try:
         response = requests.post(f"{API_URL}/submit-repo", json={"repo_url": repo_url})
         if response.status_code == 200:
@@ -38,9 +37,7 @@ def submit_repository(repo_url):
 
 
 def query_with_history(message, history, namespace):
-    """
-    Query the backend with history.
-    """
+    """Query the backend with the chat history."""
     try:
         formatted_history = [
             {"role": "user", "content": human} if i % 2 == 0 else {"role": "assistant", "content": ai}
@@ -58,159 +55,90 @@ def query_with_history(message, history, namespace):
 
 def create_ui():
     """
-    Create Gradio UI with repository management and chat functionality, preserving custom CSS.
+    Create Gradio UI with repository management and chat functionality.
     """
     namespaces = fetch_namespaces()
 
-    # Define custom CSS
-    custom_css = """
-        .contain-chatbox {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .header-row {
-            flex-shrink: 0;
-        }
-        .full-height-chatbox {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-            overflow: hidden;
-        }
-        .full-height-chatbox > div {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-        .full-height-chatbox .wrapper {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-        .full-height-chatbox .wrapper > div:last-child {
-            flex-grow: 1;
-            min-height: 0;
-            overflow-y: auto;
-        }
-        .full-height-chatbox .block {
-            padding: 0 !important;
-            margin: 0 !important;
-        }
-        .full-height-chatbox .chatbot {
-            height: 100% !important;
-            max-height: none !important;
-        }
-        .full-height-chatbox .chat-bubble {
-            margin-bottom: 0 !important;
-        }
-        .full-height-chatbox .chat-bubble-row {
-            margin-bottom: 0 !important;
-        }
-        .full-height-chatbox .wrapper > div {
-            padding: 0 !important;
-        }
-        .full-height-chatbox .wrapper > .block:first-child {
-            display: none !important;
-        }
-        .full-height-chatbox .examples {
-            display: none !important;
-        }
-        .full-height-chatbox .generate-box {
-            margin-bottom: 0 !important;
-        }
-        .full-height-chatbox .input-row {
-            margin-bottom: 0 !important;
-        }
-        .full-height-chatbox .input-row + div {
-            display: none !important;
-        }
-        .full-height-chatbox .wrapper > div:nth-child(2) {
-            flex-grow: 1 !important;
-            min-height: 0 !important;
-        }
-        .centered-markdown {
-            text-align: center !important;
-            width: 100% !important;
-        }
-    """
-
-    with gr.Blocks(css=custom_css) as demo:
+    with gr.Blocks() as demo:
         namespace_state = gr.State(value=None)
         chat_history = gr.State(value=[])
 
-        with gr.Column(elem_classes="contain-chatbox"):
-            gr.Markdown(
-                "## Codebase Chat App with Repository Management",
-                elem_classes="centered-markdown header-row",
-            )
+        with gr.Column():
+            gr.Markdown("## Codebase Chat App with Repository Management")
+            
+            gr.Markdown("""
+            **Instructions:**
+            1. Enter the GitHub repository URL you wish to clone and click **Git Clone 😺**.
+            2. After cloning, to see the new repository appear in the namespace dropdown, type any character into the URL box and click **Git Clone 😺** again.
+            3. Select the desired namespace from the dropdown.
+            4. Use the chatbot below to interact with the selected codebase.
+            5. I'm so sorry for this :( , I'm currently working on it 🙂‍↕️
+            """)
+            
+            with gr.Row():
+                repo_url_input = gr.Textbox(label="GitHub Repository URL", placeholder="Enter repo URL to clone")
+                clone_button = gr.Button("Git Clone 😺")
+                clone_status = gr.Textbox(label="Clone Status", interactive=False)
 
-            with gr.Row(elem_classes="header-row"):
-                with gr.Column():
-                    repo_url_input = gr.Textbox(label="GitHub Repository URL", placeholder="Enter repo URL to clone")
-                    clone_button = gr.Button("Git Clone 😺")
-                    clone_status = gr.Textbox(label="Clone Status", interactive=False)
+                namespace_dropdown = gr.Dropdown(
+                    choices=namespaces, label="Namespace", interactive=True
+                )
 
-                with gr.Column():
-                    namespace_dropdown = gr.Dropdown(
-                        choices=namespaces,
-                        label="Namespace",
-                        interactive=True,
-                    )
+            chatbot = gr.Chatbot(label="Codebase Chatbot", type="messages")
+            message_input = gr.Textbox(placeholder="Enter your message here...")
+            send_button = gr.Button("Send")
 
-            # Chat container with preserved styles
-            with gr.Column(elem_classes="full-height-chatbox", elem_id="chat-container"):
-                chatbot = gr.Chatbot(label="Codebase Chatbot", type="messages", elem_id="chatbot")
-                message_input = gr.Textbox(placeholder="Enter your message here...")
-                send_button = gr.Button("Send")
-
-        def update_namespace_or_clone(repo_url, selected_namespace):
+        def update_namespace_or_clone(repo_url, current_namespace):
+            """Update namespace dropdown or clone repository."""
             if repo_url:
                 message = submit_repository(repo_url)
                 updated_namespaces = fetch_namespaces()
-                return gr.update(choices=updated_namespaces, value=None), message, []
-            elif selected_namespace:
-                # Reset chat history when a namespace is selected
-                return gr.update(), f"Selected namespace: {selected_namespace}", []
-            return gr.update(), "Please provide a repository URL or select a namespace.", []
+                return (
+                    gr.update(choices=updated_namespaces, value=None),  # Update namespace dropdown
+                    message,  # Show clone status
+                    [],  # Clear chat history after cloning
+                    None  # Reset namespace_state
+                )
+            return gr.update(), "Please provide a repository URL.", current_namespace, current_namespace
 
         def handle_query(message, history, namespace):
-            # Ensure namespace is selected before handling query
+            """Handle query submission while preserving chat history."""
             if namespace is None:
-                return history + [{"role": "system", "content": "Please select a namespace first!"}], gr.update(value="")
-            # Append user message and system response
+                new_history = history + [("System", "Please select a namespace first!")]
+                return new_history, new_history, gr.update(value="")
             response = query_with_history(message, history, namespace)
+            new_history = history + [(message, response)]
             return (
-                history + [{"role": "user", "content": message}, {"role": "assistant", "content": response}],
+                new_history,
+                new_history,  # Update chat_history state
                 gr.update(value=""),  # Clear input box after sending
             )
 
-        def reset_chat_on_namespace_change(selected_namespace):
-            # Reset chat history only when switching namespaces
-            if selected_namespace:
-                return [], f"Switched to namespace: {selected_namespace}"
-            return [], "No namespace selected."
+        def reset_chat_on_namespace_change(selected_namespace, current_namespace):
+            """Reset chat history only when switching namespaces."""
+            if selected_namespace != current_namespace:
+                return [], selected_namespace, f"Switched to namespace: {selected_namespace}"
+            return chat_history.value, current_namespace, "No namespace change."
 
+        # Bind clone button to namespace update
         clone_button.click(
             update_namespace_or_clone,
-            inputs=[repo_url_input, namespace_dropdown],
-            outputs=[namespace_dropdown, clone_status, chat_history],
+            inputs=[repo_url_input, namespace_state],
+            outputs=[namespace_dropdown, clone_status, chat_history, namespace_state],
         )
 
+        # Bind namespace dropdown to chat reset
         namespace_dropdown.change(
             reset_chat_on_namespace_change,
-            inputs=[namespace_dropdown],
-            outputs=[chat_history, clone_status],  # Reset chat history only here
+            inputs=[namespace_dropdown, namespace_state],
+            outputs=[chat_history, namespace_state, clone_status],
         )
 
+        # Bind send button to query handler
         send_button.click(
             handle_query,
             inputs=[message_input, chat_history, namespace_dropdown],
-            outputs=[chatbot, message_input],  # Reset message_input only after query
+            outputs=[chatbot, chat_history, message_input],
         )
 
     return demo
