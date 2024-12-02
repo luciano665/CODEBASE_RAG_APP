@@ -39,6 +39,7 @@ def submit_repository(repo_url):
 def query_with_history(message, history, namespace):
     """Query the backend with the chat history."""
     try:
+        # Convert the history to the backend API's expected format
         formatted_history = [
             {"role": "user", "content": human} if i % 2 == 0 else {"role": "assistant", "content": ai}
             for i, (human, ai) in enumerate(history)
@@ -46,11 +47,12 @@ def query_with_history(message, history, namespace):
         payload = {"query": message, "history": formatted_history, "namespace": namespace}
         response = requests.post(f"{API_URL}/query", json=payload)
         if response.status_code == 200:
-            return response.json().get("answer", "No response.")
+            answer = response.json().get("answer", "No response.")
+            return history + [(message, answer)]
         else:
-            return f"Error: {response.json().get('detail', 'Unknown error')}"
+            return history + [(message, f"Error: {response.json().get('detail', 'Unknown error')}")]
     except Exception as e:
-        return f"Failed to process query: {str(e)}"
+        return history + [(message, f"Failed to process query: {str(e)}")]
 
 
 def create_ui():
@@ -65,16 +67,15 @@ def create_ui():
 
         with gr.Column():
             gr.Markdown("## Codebase Chat App with Repository Management")
-            
+
             gr.Markdown("""
             **Instructions:**
             1. Enter the GitHub repository URL you wish to clone and click **Git Clone 😺**.
             2. After cloning, to see the new repository appear in the namespace dropdown, type any character into the URL box and click **Git Clone 😺** again.
             3. Select the desired namespace from the dropdown.
             4. Use the chatbot below to interact with the selected codebase.
-            5. I'm so sorry for this :( , I'm currently working on it 🙂‍↕️
             """)
-            
+
             with gr.Row():
                 repo_url_input = gr.Textbox(label="GitHub Repository URL", placeholder="Enter repo URL to clone")
                 clone_button = gr.Button("Git Clone 😺")
@@ -84,7 +85,7 @@ def create_ui():
                     choices=namespaces, label="Namespace", interactive=True
                 )
 
-            chatbot = gr.Chatbot(label="Codebase Chatbot", type="messages")
+            chatbot = gr.Chatbot(label="Codebase Chatbot")
             message_input = gr.Textbox(placeholder="Enter your message here...")
             send_button = gr.Button("Send")
 
@@ -106,11 +107,10 @@ def create_ui():
             if namespace is None:
                 new_history = history + [("System", "Please select a namespace first!")]
                 return new_history, new_history, gr.update(value="")
-            response = query_with_history(message, history, namespace)
-            new_history = history + [(message, response)]
+            updated_history = query_with_history(message, history, namespace)
             return (
-                new_history,
-                new_history,  # Update chat_history state
+                updated_history,
+                updated_history,  # Update chat_history state
                 gr.update(value=""),  # Clear input box after sending
             )
 
