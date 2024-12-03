@@ -37,7 +37,7 @@ Ensure you have the following installed:
   PINECONE_API_KEY=<your_pinecone_api_key>
   GROQ_API_KEY=<your_key>
   ```
-    - Make sure to also crete your own Pinecone-Index
+   - Make sure to also crete your own Pinecone-Index
 
 5. **Run the API first:
    ```
