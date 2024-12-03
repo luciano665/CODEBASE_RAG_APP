@@ -25,8 +25,7 @@ Ensure you have the following installed:
 
 1. **Clone the Repository**:
    ```
-   git clone <repository_url>
-   cd CODEBASE_RAG_APP-main
+   git clone 
    ```
 2. **Install Dependencies:
 - Install the required Python packages:
