@@ -2,6 +2,9 @@
 
 **CODEBASE RAG APP** is an AI-powered tool for interacting with codebases dynamically. It leverages advanced chunking, parsing, and embedding techniques to enable efficient exploration and understanding of large repositories.
 
+## Huggingface spaces deployment: https://huggingface.co/spaces/Luciano665/Codebase-RAG-App
+
+
 ## Features
 
 - **Clone Repositories**: Clone GitHub repositories directly for analysis.
